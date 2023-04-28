@@ -18,6 +18,6 @@ router.post("/edit-transaction", editTransaction);
 router.post("/delete-transaction", deleteTransaction);
 
 //get transactions
-router.post("/get-transaction", getAllTransaction);
+router.get("/get-transaction", getAllTransaction);
 
 module.exports = router;

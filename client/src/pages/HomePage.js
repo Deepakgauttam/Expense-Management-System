@@ -1,13 +1,64 @@
-import React, { useState } from "react";
-import { Modal, Select } from "antd";
+import React, { useEffect, useState } from "react";
+import { Modal, Select, Table } from "antd";
 import { Form, Input, message } from "antd";
 import Layout from "./../components/Layout/Layout";
 import axios from "axios";
 import Spinner from "../components/Spinner";
 
+//table data
+const columns = [
+  {
+    title: "Date",
+    dataIndex: "date",
+  },
+  {
+    title: "Amount",
+    dataIndex: "amount",
+  },
+  {
+    title: "Type",
+    dataIndex: "type",
+  },
+  {
+    title: "Category",
+    dataIndex: "category",
+  },
+  {
+    title: "Reference",
+    dataIndex: "reference",
+  },
+  {
+    title: "Actions",
+  },
+];
+
 const HomePage = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [allTransaction, setAllTransaction] = useState([]);
+  const [frequency, setFrequency]=useState('7');
+
+
+  //useeffect hook
+  useEffect(() => {
+     //get all Transcation
+  const getAllTransactions = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      setLoading(true);
+      const res = await axios.get("/transactions/get-transaction", {
+        userid: user._id,
+      });
+      setLoading(false);
+      setAllTransaction(res.data);
+      console.log(res.data)
+    } catch (error) {
+      console.log(error);
+      message.error("fetch Issue with transaction");
+    }
+  };
+    getAllTransactions();
+  }, []);
 
   //form handling
   const handleSubmit = async (values) => {
@@ -16,7 +67,7 @@ const HomePage = () => {
       setLoading(true);
       await axios.post("/transactions/add-transaction", {
         ...values,
-        userid: user._id
+        userid: user._id,
       });
       setLoading(false);
       message.success("Transaction Added Successfully");
@@ -29,8 +80,16 @@ const HomePage = () => {
   return (
     <Layout>
       <div className="filters">
-      {loading && <Spinner />}
-        <div>range filters</div>
+        {loading && <Spinner />}
+        <div>
+          <h6>Select Frequency</h6>
+          <Select value={frequency} onChange={(values)=>setFrequency(values)}>
+            <Select.Option value="7">Last 1 Week</Select.Option>
+            <Select.Option value="30">Last 1 Month</Select.Option>
+            <Select.Option value="365">Last 1 Year</Select.Option>
+            <Select.Option value="custome">Custom</Select.Option>
+          </Select>
+        </div>
         <div>
           <button
             className="btn btn-primary"
@@ -40,7 +99,9 @@ const HomePage = () => {
           </button>
         </div>
       </div>
-      <div className="content"></div>
+      <div className="content">
+        <Table columns={columns} dataSource={allTransaction} />
+      </div>
       <Modal
         title="Add Transaction"
         open={showModal}
